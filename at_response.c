@@ -270,11 +270,11 @@ static int at_response_error (struct pvt* pvt, at_res_t res)
 	const at_queue_task_t * task = at_queue_head_task(pvt);
 	const at_queue_cmd_t * ecmd = at_queue_task_cmd(task);
 
-	bool log = true;
+	char log = 1;
 
 	if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
 		if (!DEBUG_ATLEAST(1)) {
-			log = false;
+			log = 0;
 		}
 	}
 
