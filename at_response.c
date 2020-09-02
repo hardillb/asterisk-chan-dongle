@@ -265,37 +265,18 @@ static int at_response_ok (struct pvt* pvt, at_res_t res)
 	return 0;
 }
 
-// static void log_cmd_response_error(const struct pvt* pvt, const at_queue_cmd_t *ecmd, const char *fmt, ...)
-// {
-// 	va_list ap;
-
-// 	if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-// 		if (DEBUG_ATLEAST(1)) {
-// 			ast_log(AST_LOG_DEBUG, "[%s] Command response error suppressed:\n", PVT_ID(pvt));
-// 			va_start(ap, fmt);
-// 			ast_log_ap(AST_LOG_DEBUG, fmt, ap);
-// 			va_end(ap);
-// 		}
-
-// 		return;
-// 	}
-
-// 	va_start(ap, fmt);
-// 	ast_log_ap(LOG_ERROR, fmt, ap);
-// 	va_end(ap);
-// }
-
-/*!
- * \brief Handle ERROR response
- * \param pvt -- pvt structure
- * \retval  0 success
- * \retval -1 error
- */
-
 static int at_response_error (struct pvt* pvt, at_res_t res)
 {
 	const at_queue_task_t * task = at_queue_head_task(pvt);
 	const at_queue_cmd_t * ecmd = at_queue_task_cmd(task);
+
+	bool log = true;
+
+	if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
+		if (!DEBUG_ATLEAST(1)) {
+			log = false;
+		}
+	}
 
 	if (ecmd && (ecmd->res == RES_OK || ecmd->res == RES_CMGR || ecmd->res == RES_SMS_PROMPT))
 	{
@@ -306,11 +287,7 @@ static int at_response_error (struct pvt* pvt, at_res_t res)
 			case CMD_AT_Z:
 			case CMD_AT_E:
 			case CMD_AT_CLCC:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Command '%s' failed\n", PVT_ID(pvt), at_cmd2str (ecmd->cmd));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Command '%s' failed\n", PVT_ID(pvt), at_cmd2str (ecmd->cmd));
 				}
 				/* mean disconnected from device */
@@ -321,102 +298,62 @@ static int at_response_error (struct pvt* pvt, at_res_t res)
 			case CMD_AT_CCWA_SET:
 			case CMD_AT_CCWA_STATUS:
 			case CMD_AT_CNUM:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Command '%s' failed\n", PVT_ID(pvt), at_cmd2str (ecmd->cmd));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Command '%s' failed\n", PVT_ID(pvt), at_cmd2str (ecmd->cmd));
 				}
 				/* mean ignore error */
 				break;
 
 			case CMD_AT_CGMI:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Getting manufacturer info failed\n", PVT_ID(pvt));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Getting manufacturer info failed\n", PVT_ID(pvt));
 				}
 				goto e_return;
 
 			case CMD_AT_CGMM:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Getting model info failed\n", PVT_ID(pvt));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Getting model info failed\n", PVT_ID(pvt));
 				}
 				goto e_return;
 
 			case CMD_AT_CGMR:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Getting firmware info failed\n", PVT_ID(pvt));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Getting firmware info failed\n", PVT_ID(pvt));
 				}
 				goto e_return;
 
 			case CMD_AT_CMEE:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Setting error verbosity level failed\n", PVT_ID(pvt));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Setting error verbosity level failed\n", PVT_ID(pvt));
 				}
 				goto e_return;
 
 			case CMD_AT_CGSN:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Getting IMEI number failed\n", PVT_ID(pvt));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Getting IMEI number failed\n", PVT_ID(pvt));
 				}
 				goto e_return;
 
 			case CMD_AT_CIMI:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Getting IMSI number failed\n", PVT_ID(pvt));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Getting IMSI number failed\n", PVT_ID(pvt));
 				}
 				goto e_return;
 
 			case CMD_AT_CPIN:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Error checking PIN state\n", PVT_ID(pvt));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Error checking PIN state\n", PVT_ID(pvt));
 				}
 				goto e_return;
 
 			case CMD_AT_COPS_INIT:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Error setting operator select parameters\n", PVT_ID(pvt));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Error setting operator select parameters\n", PVT_ID(pvt));
 				}
 				goto e_return;
 
 			case CMD_AT_CREG_INIT:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Error enabling registration info\n", PVT_ID(pvt));
-					}
-				} else  {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Error enabling registration info\n", PVT_ID(pvt));
 				}
 				goto e_return;
@@ -436,11 +373,7 @@ static int at_response_error (struct pvt* pvt, at_res_t res)
 					/* continue initialization in other job at cmd CMD_AT_CMGF */
 					if (at_enqueue_initialization(task->cpvt, CMD_AT_CMGF))
 					{
-						if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-							if (DEBUG_ATLEAST(1)) {
-								ast_log(LOG_ERROR, "[%s] Error schedule initialization commands\n", PVT_ID(pvt));
-							}
-						} else {
+						if (log) {
 							ast_log(LOG_ERROR, "[%s] Error schedule initialization commands\n", PVT_ID(pvt));
 						}
 						goto e_return;
@@ -455,11 +388,7 @@ static int at_response_error (struct pvt* pvt, at_res_t res)
 				goto e_return;
 */
 			case CMD_AT_CSSN:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Error Supplementary Service Notification activation failed\n", PVT_ID(pvt));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Error Supplementary Service Notification activation failed\n", PVT_ID(pvt));
 				}
 				goto e_return;
@@ -479,11 +408,7 @@ static int at_response_error (struct pvt* pvt, at_res_t res)
 						/* continue initialization in other job at cmd CMD_AT_CSQ */
 						if (at_enqueue_initialization(task->cpvt, CMD_AT_CSQ))
 						{
-							if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-								if (DEBUG_ATLEAST(1)) {
-									ast_log(LOG_ERROR, "[%s] Error querying signal strength\n", PVT_ID(pvt));
-								}
-							} else {
+							if (log) {
 								ast_log(LOG_ERROR, "[%s] Error querying signal strength\n", PVT_ID(pvt));
 							}
 						goto e_return;
@@ -506,33 +431,21 @@ static int at_response_error (struct pvt* pvt, at_res_t res)
 
 			case CMD_AT_A:
 			case CMD_AT_CHLD_2x:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Answer failed for call idx %d\n", PVT_ID(pvt), task->cpvt->call_idx);
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Answer failed for call idx %d\n", PVT_ID(pvt), task->cpvt->call_idx);
 				}
 				queue_hangup (task->cpvt->channel, 0);
 				break;
 
 			case CMD_AT_CHLD_3:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Can't begin conference call idx %d\n", PVT_ID(pvt), task->cpvt->call_idx);
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Can't begin conference call idx %d\n", PVT_ID(pvt), task->cpvt->call_idx);
 				}
 				queue_hangup(task->cpvt->channel, 0);
 				break;
 
 			case CMD_AT_CLIR:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Setting CLIR failed\n", PVT_ID(pvt));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Setting CLIR failed\n", PVT_ID(pvt));
 				}
 				break;
@@ -544,54 +457,34 @@ static int at_response_error (struct pvt* pvt, at_res_t res)
 				}
 				/* fall through */
 			case CMD_AT_D:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Dial failed\n", PVT_ID(pvt));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Dial failed\n", PVT_ID(pvt));
 				}
 				queue_control_channel (task->cpvt, AST_CONTROL_CONGESTION);
 				break;
 
 			case CMD_AT_DDSETEX:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] AT^DDSETEX failed\n", PVT_ID(pvt));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] AT^DDSETEX failed\n", PVT_ID(pvt));
 				}
 				break;
 
 			case CMD_AT_CHUP:
 			case CMD_AT_CHLD_1x:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Error sending hangup for call idx %d\n", PVT_ID(pvt), task->cpvt->call_idx);
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Error sending hangup for call idx %d\n", PVT_ID(pvt), task->cpvt->call_idx);
 				}
 				break;
 
 			case CMD_AT_CMGR:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Error reading SMS message\n", PVT_ID(pvt));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Error reading SMS message\n", PVT_ID(pvt));
 				}
 				at_retrieve_next_sms(&pvt->sys_chan, at_cmd_suppress_error_mode(ecmd->flags));
 				break;
 
 			case CMD_AT_CMGD:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Error deleting SMS message\n", PVT_ID(pvt));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Error deleting SMS message\n", PVT_ID(pvt));
 				}
 				break;
@@ -623,21 +516,13 @@ static int at_response_error (struct pvt* pvt, at_res_t res)
 				}
 
 				ast_verb (3, "[%s] Error sending SMS message %p\n", PVT_ID(pvt), task);
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Error sending SMS message %p %s\n", PVT_ID(pvt), task, at_cmd2str (ecmd->cmd));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Error sending SMS message %p %s\n", PVT_ID(pvt), task, at_cmd2str (ecmd->cmd));
 				}
 				break;
 
 			case CMD_AT_DTMF:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Error sending DTMF\n", PVT_ID(pvt));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Error sending DTMF\n", PVT_ID(pvt));
 				}
 				break;
@@ -653,21 +538,13 @@ static int at_response_error (struct pvt* pvt, at_res_t res)
 
 			case CMD_AT_CUSD:
 				ast_verb (3, "[%s] Error sending USSD %p\n", PVT_ID(pvt), task);
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Error sending USSD %p\n", PVT_ID(pvt), task);
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Error sending USSD %p\n", PVT_ID(pvt), task);
 				}
 				break;
 
 			default:
-				if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-					if (DEBUG_ATLEAST(1)) {
-						ast_log(LOG_ERROR, "[%s] Received 'ERROR' for unhandled command '%s'\n", PVT_ID(pvt), at_cmd2str (ecmd->cmd));
-					}
-				} else {
+				if (log) {
 					ast_log(LOG_ERROR, "[%s] Received 'ERROR' for unhandled command '%s'\n", PVT_ID(pvt), at_cmd2str (ecmd->cmd));
 				}
 				break;
@@ -681,11 +558,7 @@ static int at_response_error (struct pvt* pvt, at_res_t res)
 			at_retrieve_next_sms(&pvt->sys_chan, at_cmd_suppress_error_mode(ecmd->flags));
 			break;
 		default:
-			if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-				if (DEBUG_ATLEAST(1)) {
-					ast_log(LOG_ERROR, "[%s] Received 'ERROR' when expecting '%s', ignoring\n", PVT_ID(pvt), at_res2str (ecmd->res));
-				}
-			} else {
+			if (log) {
 				ast_log(LOG_ERROR, "[%s] Received unexpected 'ERROR'\n", PVT_ID(pvt));
 			}
 			break;
@@ -693,11 +566,7 @@ static int at_response_error (struct pvt* pvt, at_res_t res)
 	}
 	else
 	{
-		if (at_cmd_suppress_error_mode(ecmd->flags) == SUPPRESS_ERROR_ENABLED) {
-			if (DEBUG_ATLEAST(1)) {
-				ast_log(LOG_ERROR, "[%s] Received unexpected 'ERROR'\n", PVT_ID(pvt));
-			}
-		} else {
+		if (log) {
 			ast_log(LOG_ERROR, "[%s] Received unexpected 'ERROR'\n", PVT_ID(pvt));
 		}
 	}
